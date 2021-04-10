@@ -1,0 +1,39 @@
+version: "3.4"
+services:
+  splash:
+    image: scrapinghub/splash
+  web:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${BIND_PORT:-8000}:8000
+    env_file:
+      - .env
+    volumes:
+      - ./db.sqlite3:/var/app/db.sqlite3
+  scraper:
+    build:
+      context: .
+      target: shell
+    links:
+      - splash
+    command: runscraper
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      IMMOBOT_SPLASH_URL: "http://splash:8050/"
+    volumes:
+      - ./db.sqlite3:/var/app/db.sqlite3
+  bot:
+    build:
+      context: .
+      target: shell
+    command: runbot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./db.sqlite3:/var/app/db.sqlite3
